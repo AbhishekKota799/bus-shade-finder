@@ -296,3 +296,75 @@ dd {
 .map-summary strong {
     color: var(--text);
 }
+
+.recommendation-card {
+    margin-bottom: 18px;
+    border: 1px solid rgba(23, 107, 135, 0.22);
+    border-radius: 8px;
+    background: #eef8fb;
+    padding: 18px;
+}
+
+.recommendation-card strong {
+    display: block;
+    margin: 3px 0 8px;
+    color: var(--primary-dark);
+    font-size: 1.8rem;
+}
+
+.recommendation-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.card-label {
+    color: var(--primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.timeline {
+    margin-top: 24px;
+}
+
+.timeline h3 {
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+}
+
+.timeline-list {
+    display: grid;
+    gap: 10px;
+    max-height: 360px;
+    overflow: auto;
+}
+
+.timeline-item {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) auto;
+    gap: 4px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.timeline-item span,
+.timeline-item small,
+.timeline-empty {
+    color: var(--muted);
+}
+
+.timeline-item strong {
+    color: var(--primary-dark);
+}
+
+.timeline-item small {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+    .timeline-item {
+        grid-template-columns: 1fr;
+    }
+}

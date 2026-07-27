@@ -71,26 +71,23 @@
                     <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
                     <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
                 </div>
+                <div class="recommendation-card">
+                    <span class="card-label">Recommended side</span>
+                    <strong>{{ recommended_side | default('--') }}</strong>
+                    <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
+                </div>
                 <dl class="result-list">
                     <div>
-                        <dt>Recommended Side</dt>
-                        <dd>{{ recommended_side | default('--') }}</dd>
+                        <dt>Confidence</dt>
+                        <dd>{{ shade_score | default('--') }}{% if shade_score is defined and shade_score != '--' %}%{% endif %}</dd>
                     </div>
                     <div>
-                        <dt>Shade Score</dt>
-                        <dd>{{ shade_score | default('--') }}</dd>
+                        <dt>Left Exposure</dt>
+                        <dd>{{ left_exposure | default('--') }}{% if left_exposure is defined %}%{% endif %}</dd>
                     </div>
                     <div>
-                        <dt>Sunny Side</dt>
-                        <dd>{{ sunny_side | default('--') }}</dd>
-                    </div>
-                    <div>
-                        <dt>Estimated Travel Time</dt>
-                        <dd>{{ estimated_travel_time | default('--') }}</dd>
-                    </div>
-                    <div>
-                        <dt>Route Distance</dt>
-                        <dd>{{ route_distance | default('--') }}</dd>
+                        <dt>Right Exposure</dt>
+                        <dd>{{ right_exposure | default('--') }}{% if right_exposure is defined %}%{% endif %}</dd>
                     </div>
                     <div>
                         <dt>Route Points</dt>
@@ -101,6 +98,23 @@
                         <dd>{{ turn_count | default('--') }}</dd>
                     </div>
                 </dl>
+
+                <section class="timeline" aria-labelledby="timeline-title">
+                    <h3 id="timeline-title">Journey timeline</h3>
+                    {% if journey_timeline %}
+                        <div class="timeline-list">
+                            {% for item in journey_timeline %}
+                                <article class="timeline-item">
+                                    <span>{{ item.time }}</span>
+                                    <strong>{{ item.recommended_side }}</strong>
+                                    <small>Left: {{ item.left_exposure }} | Right: {{ item.right_exposure }}</small>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="timeline-empty">Timeline will appear after a route is analyzed.</p>
+                    {% endif %}
+                </section>
             </section>
         </section>
 

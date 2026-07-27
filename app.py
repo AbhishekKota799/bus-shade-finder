@@ -250,6 +250,7 @@ def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
         }
 
     route = analysis['route']
+    exposure = analysis['exposure']
     recommendation = analysis['recommendation']
     logger.info(
         'Route retrieved: %s to %s, %.0f meters, %.0f seconds, %s turns',
@@ -270,6 +271,10 @@ def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
         'destination_marker': route['destination'],
         'recommended_side': recommendation['recommended_side'],
         'shade_score': recommendation['confidence'],
+        'recommendation_reason': recommendation['reason'],
+        'left_exposure': exposure['exposure_percentage']['left'],
+        'right_exposure': exposure['exposure_percentage']['right'],
+        'journey_timeline': analysis['timeline'],
     }
 
 
