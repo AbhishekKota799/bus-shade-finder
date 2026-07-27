@@ -34,6 +34,7 @@ from services.shade import (
     serialize_exposure_summary,
 )
 from services.solar import SolarCalculationError, calculate_solar_position
+from services.timeline import TimelineError
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -240,6 +241,7 @@ def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
         RoutingError,
         ShadeExposureError,
         SolarCalculationError,
+        TimelineError,
     ) as exc:
         logger.warning('Route lookup failed: %s', exc)
         return {

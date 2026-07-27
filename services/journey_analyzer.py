@@ -13,6 +13,7 @@ from services.routing import (
 )
 from services.shade import calculate_side_exposure, serialize_exposure_summary
 from services.solar import calculate_solar_position
+from services.timeline import build_journey_timeline
 
 
 @dataclass(frozen=True)
@@ -81,6 +82,12 @@ class JourneyAnalyzer:
             'relative_sun': serialize_relative_positions(relative_positions),
             'exposure': serialize_exposure_summary(exposure),
             'recommendation': serialize_recommendation(recommendation),
+            'timeline': build_journey_timeline(
+                route_coordinates=route.coordinates,
+                departure_time=departure_time,
+                duration_seconds=route.duration_seconds,
+                timezone_name=self.timezone_name,
+            ),
         }
 
     def _calculate_segment_solar_positions(
