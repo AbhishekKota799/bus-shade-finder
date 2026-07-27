@@ -22,6 +22,11 @@ from services.routing import (
     format_duration,
     get_driving_route,
 )
+from services.recommendation import (
+    RecommendationError,
+    recommend_side,
+    serialize_recommendation,
+)
 from services.shade import (
     ShadeExposureError,
     calculate_side_exposure,
@@ -138,11 +143,17 @@ def shade_exposure_data():
 
     try:
         summary = calculate_side_exposure(payload.get('segments'))
-    except ShadeExposureError as exc:
+        recommendation = recommend_side(
+            summary.exposure_percentage['left'],
+            summary.exposure_percentage['right'],
+        )
+    except (ShadeExposureError, RecommendationError) as exc:
         logger.warning('Shade exposure calculation failed: %s', exc)
         return jsonify({'error': str(exc)}), 400
 
-    return jsonify(serialize_exposure_summary(summary))
+    response = serialize_exposure_summary(summary)
+    response['recommendation'] = serialize_recommendation(recommendation)
+    return jsonify(response)
 
 
 def _default_context() -> dict[str, object]:
