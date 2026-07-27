@@ -59,7 +59,14 @@ function initializeRouteMap() {
     }).addTo(map);
 
     addRouteMarkers(map, startMarker, destinationMarker);
-    map.fitBounds(routeLine.getBounds(), { padding: [28, 28] });
+    setTimeout(() => {
+    map.invalidateSize();
+    map.fitBounds(routeLine.getBounds(), {
+        padding: [28, 28]
+    });
+}, 100);
 }
 
 document.addEventListener('DOMContentLoaded', initializeRouteMap);
+
+
