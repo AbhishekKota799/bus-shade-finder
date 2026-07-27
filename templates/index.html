@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bus Shade Finder</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQxqN8T6fgy8Q4bQnbGT1aKb1J8wL3E=" crossorigin="">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="{{ url_for('home') }}">Bus Shade Finder</a>
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="#about">About</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" aria-labelledby="page-title">
+            <div class="hero-content">
+                <p class="eyebrow">Shade-aware bus seating</p>
+                <h1 id="page-title">Find the cooler side of your ride.</h1>
+                <p class="intro">Enter your trip details to prepare a route-based seat recommendation.</p>
+            </div>
+        </section>
+
+        <section class="planner" aria-labelledby="planner-title">
+            <div class="panel">
+                <h2 id="planner-title">Plan your journey</h2>
+                {% if errors %}
+                    <div class="alert" role="alert">
+                        <p>Please review your journey details:</p>
+                        <ul>
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                <form id="trip-form" class="trip-form" method="post" action="{{ url_for('home') }}#results">
+                    <label for="start_location">Starting Location</label>
+                    <input id="start_location" name="start_location" type="text" placeholder="Enter starting point" value="{{ start_location | default('') }}" required>
+
+                    <label for="destination">Destination</label>
+                    <input id="destination" name="destination" type="text" placeholder="Enter destination" value="{{ destination | default('') }}" required>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="departure_date">Departure Date</label>
+                            <input id="departure_date" name="departure_date" type="date" value="{{ departure_date | default('') }}" required>
+                        </div>
+                        <div>
+                            <label for="departure_time">Departure Time</label>
+                            <input id="departure_time" name="departure_time" type="time" value="{{ departure_time | default('') }}" required>
+                        </div>
+                    </div>
+
+                    <button type="submit">Find Best Seat</button>
+                </form>
+            </div>
+
+            <section id="results" class="panel results" aria-labelledby="results-title">
+                <h2 id="results-title">Results</h2>
+                <p class="status-message">{{ status_message | default('Enter a journey to retrieve route details.') }}</p>
+                <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' aria-label="Retrieved bus route map"></div>
+                <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
+                <div class="map-summary" aria-label="Route map summary">
+                    <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
+                    <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
+                </div>
+                <dl class="result-list">
+                    <div>
+                        <dt>Recommended Side</dt>
+                        <dd>{{ recommended_side | default('--') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Shade Score</dt>
+                        <dd>{{ shade_score | default('--') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Sunny Side</dt>
+                        <dd>{{ sunny_side | default('--') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Estimated Travel Time</dt>
+                        <dd>{{ estimated_travel_time | default('--') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Route Distance</dt>
+                        <dd>{{ route_distance | default('--') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Route Points</dt>
+                        <dd>{{ route_coordinate_count | default('--') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Turn Steps</dt>
+                        <dd>{{ turn_count | default('--') }}</dd>
+                    </div>
+                </dl>
+            </section>
+        </section>
+
+        <section id="about" class="about" aria-labelledby="about-title">
+            <h2 id="about-title">About</h2>
+            <p>Bus Shade Finder will combine route direction, travel time, and sun position to recommend the shaded side of the bus.</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; {{ current_year | default('2026') }} Bus Shade Finder</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
