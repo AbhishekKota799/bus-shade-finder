@@ -269,7 +269,8 @@ dd {
 }
 
 .route-map {
-    min-height: 320px;
+    width: 100%;
+    height: 500px;       /* Fixed height instead of min-height */
     margin-bottom: 14px;
     border: 1px solid var(--line);
     border-radius: 8px;
