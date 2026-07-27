@@ -11,6 +11,7 @@ from services.heading import (
     calculate_route_headings,
     serialize_headings,
 )
+from services.journey_analyzer import JourneyAnalyzer
 from services.relative_sun import (
     RelativeSunError,
     classify_route_segments,
@@ -216,56 +217,57 @@ def _validate_form_values(form_values: dict[str, str]) -> list[str]:
 
 def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
     try:
-        origin = geocode_address(
-            form_values['start_location'],
-            app.config['GEOCODER_BASE_URL'],
-            app.config['GEOCODER_USER_AGENT'],
-            app.config['REQUEST_TIMEOUT_SECONDS'],
+        analyzer = JourneyAnalyzer(
+            geocoder_base_url=app.config['GEOCODER_BASE_URL'],
+            geocoder_user_agent=app.config['GEOCODER_USER_AGENT'],
+            osrm_base_url=app.config['OSRM_BASE_URL'],
+            request_timeout_seconds=app.config['REQUEST_TIMEOUT_SECONDS'],
         )
-        destination = geocode_address(
-            form_values['destination'],
-            app.config['GEOCODER_BASE_URL'],
-            app.config['GEOCODER_USER_AGENT'],
-            app.config['REQUEST_TIMEOUT_SECONDS'],
+        departure_time = datetime.strptime(
+            f"{form_values['departure_date']} {form_values['departure_time']}",
+            '%Y-%m-%d %H:%M',
         )
-        route = get_driving_route(
-            origin,
-            destination,
-            app.config['OSRM_BASE_URL'],
-            app.config['REQUEST_TIMEOUT_SECONDS'],
+        analysis = analyzer.analyze(
+            source=form_values['start_location'],
+            destination=form_values['destination'],
+            departure_time=departure_time,
         )
-    except (GeocodingError, RoutingError) as exc:
+    except (
+        GeocodingError,
+        HeadingCalculationError,
+        RecommendationError,
+        RelativeSunError,
+        RoutingError,
+        ShadeExposureError,
+        SolarCalculationError,
+    ) as exc:
         logger.warning('Route lookup failed: %s', exc)
         return {
             'errors': [str(exc)],
             'status_message': 'Route lookup failed. Please check the locations and try again.',
         }
 
+    route = analysis['route']
+    recommendation = analysis['recommendation']
     logger.info(
         'Route retrieved: %s to %s, %.0f meters, %.0f seconds, %s turns',
-        origin.display_name,
-        destination.display_name,
-        route.distance_meters,
-        route.duration_seconds,
-        len(route.turns),
+        route['origin']['label'],
+        route['destination']['label'],
+        route['distance_meters'],
+        route['duration_seconds'],
+        route['turn_count'],
     )
     return {
-        'estimated_travel_time': format_duration(route.duration_seconds),
-        'route_distance': format_distance(route.distance_meters),
+        'estimated_travel_time': route['duration'],
+        'route_distance': route['distance'],
         'status_message': 'Driving route retrieved successfully.',
-        'route_coordinate_count': len(route.coordinates),
-        'turn_count': len(route.turns),
-        'route_coordinates': route.coordinates,
-        'start_marker': {
-            'label': origin.display_name,
-            'latitude': origin.latitude,
-            'longitude': origin.longitude,
-        },
-        'destination_marker': {
-            'label': destination.display_name,
-            'latitude': destination.latitude,
-            'longitude': destination.longitude,
-        },
+        'route_coordinate_count': route['coordinate_count'],
+        'turn_count': route['turn_count'],
+        'route_coordinates': route['coordinates'],
+        'start_marker': route['origin'],
+        'destination_marker': route['destination'],
+        'recommended_side': recommendation['recommended_side'],
+        'shade_score': recommendation['confidence'],
     }
 
 
