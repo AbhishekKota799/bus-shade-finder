@@ -278,5 +278,5 @@ def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
     }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

@@ -71,9 +71,30 @@
                     <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
                     <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
                 </div>
-                <div class="recommendation-card">
+                {% set side_value = recommended_side | default('--') %}
+                {% set side_class = side_value | lower | replace(' ', '-') %}
+                <div class="bus-recommendation bus-recommendation--{{ side_class }}" aria-label="Visual bus recommendation">
                     <span class="card-label">Recommended side</span>
-                    <strong>{{ recommended_side | default('--') }}</strong>
+                    <strong>{{ side_value }}</strong>
+                    <div class="bus-visual" aria-hidden="true">
+                        <div class="direction-arrow direction-arrow--left">←</div>
+                        <div class="bus-shell">
+                            <div class="seat-column seat-column--left">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div class="bus-aisle"></div>
+                            <div class="seat-column seat-column--right">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                        <div class="direction-arrow direction-arrow--right">→</div>
+                    </div>
                     <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
                 </div>
                 <dl class="result-list">
