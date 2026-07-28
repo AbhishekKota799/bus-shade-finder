@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <div id="loading-overlay" class="loading-overlay" aria-live="polite" aria-hidden="true">
+        <div class="loading-panel" role="status">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <strong>Analyzing your journey</strong>
+            <p id="loading-status">Finding route...</p>
+        </div>
+    </div>
+
     <header class="site-header">
         <nav class="nav" aria-label="Main navigation">
             <a class="brand" href="{{ url_for('home') }}">Bus Shade Finder</a>

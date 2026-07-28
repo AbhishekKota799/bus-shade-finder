@@ -163,6 +163,66 @@ button:hover {
     background: var(--primary-dark);
 }
 
+button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(245, 247, 251, 0.86);
+    backdrop-filter: blur(6px);
+}
+
+.loading-overlay.is-visible {
+    display: flex;
+}
+
+.loading-panel {
+    width: min(100%, 340px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 28px 24px;
+    text-align: center;
+}
+
+.loading-panel strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 1.15rem;
+}
+
+.loading-panel p {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.loading-spinner {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 18px;
+    border: 5px solid #dbe7ef;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .result-list {
     display: grid;
     gap: 12px;
