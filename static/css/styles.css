@@ -7,7 +7,11 @@
     --primary: #176b87;
     --primary-dark: #0f4f64;
     --accent: #f4b942;
+    --danger: #b42318;
+    --danger-bg: #fff1f0;
+    --radius: 8px;
     --shadow: 0 16px 40px rgba(24, 32, 51, 0.08);
+    --shadow-soft: 0 10px 24px rgba(24, 32, 51, 0.07);
 }
 
 * {
@@ -26,6 +30,13 @@ body {
 a {
     color: inherit;
     text-decoration: none;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+    outline: 3px solid rgba(23, 107, 135, 0.32);
+    outline-offset: 3px;
 }
 
 .site-header {
@@ -110,7 +121,7 @@ h2 {
 .panel {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 28px;
     box-shadow: var(--shadow);
 }
@@ -137,7 +148,7 @@ input {
     width: 100%;
     min-height: 48px;
     border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border-radius: var(--radius);
     padding: 10px 12px;
     color: var(--text);
     font: inherit;
@@ -145,13 +156,12 @@ input {
 
 input:focus {
     border-color: var(--primary);
-    outline: 3px solid rgba(23, 107, 135, 0.15);
 }
 
 button {
     min-height: 50px;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: var(--primary);
     color: #ffffff;
     cursor: pointer;
@@ -303,23 +313,39 @@ dd {
     }
 }
 
-.alert {
+.error-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 12px;
     margin-bottom: 18px;
     border: 1px solid #fecaca;
-    border-radius: 6px;
-    background: #fff1f2;
-    color: #991b1b;
+    border-radius: var(--radius);
+    background: var(--danger-bg);
+    color: var(--danger);
     padding: 14px 16px;
+    box-shadow: var(--shadow-soft);
 }
 
-.alert p {
+.error-card p {
     margin-bottom: 8px;
     font-weight: 800;
 }
 
-.alert ul {
+.error-card ul {
+    grid-column: 2;
     margin: 0;
     padding-left: 20px;
+}
+
+.error-icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: #ffffff;
+    font-weight: 900;
 }
 
 .status-message {
@@ -330,10 +356,10 @@ dd {
 
 .route-map {
     width: 100%;
-    height: 500px;       /* Fixed height instead of min-height */
+    height: 500px;
     margin-bottom: 14px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     overflow: hidden;
 }
 
@@ -356,6 +382,57 @@ dd {
 
 .map-summary strong {
     color: var(--text);
+}
+
+.results-content {
+    animation: result-enter 0.34s ease-out both;
+}
+
+.empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    border: 1px dashed #b8c7d9;
+    border-radius: var(--radius);
+    background: #f8fbfd;
+    padding: 34px 20px;
+    text-align: center;
+}
+
+.empty-state-icon {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    background: var(--primary-dark);
+    color: #ffffff;
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.empty-state h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.2rem;
+}
+
+.empty-state p {
+    max-width: 34rem;
+    margin: 0;
+    color: var(--muted);
+}
+
+@keyframes result-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .map-marker-shell {
@@ -398,9 +475,10 @@ dd {
 .bus-recommendation {
     margin-bottom: 18px;
     border: 1px solid rgba(23, 107, 135, 0.22);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: #eef8fb;
     padding: 18px;
+    box-shadow: var(--shadow-soft);
 }
 
 .bus-recommendation strong {
@@ -450,7 +528,7 @@ dd {
 .seat-column span {
     min-height: 32px;
     border: 1px solid #cbd5e1;
-    border-radius: 7px;
+    border-radius: var(--radius);
     background: #e5e7eb;
 }
 
@@ -504,6 +582,16 @@ dd {
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 .timeline {
     margin-top: 24px;
 }
@@ -525,8 +613,9 @@ dd {
     grid-template-columns: minmax(120px, 1fr) auto;
     gap: 4px 12px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 12px;
+    box-shadow: var(--shadow-soft);
 }
 
 .timeline-item span,

@@ -39,8 +39,9 @@
             <div class="panel">
                 <h2 id="planner-title">Plan your journey</h2>
                 {% if errors %}
-                    <div class="alert" role="alert">
-                        <p>Please review your journey details:</p>
+                    <div class="error-card" role="alert" aria-labelledby="form-error-title">
+                        <span class="error-icon" aria-hidden="true">!</span>
+                        <p id="form-error-title">Please review your journey details:</p>
                         <ul>
                             {% for error in errors %}
                                 <li>{{ error }}</li>
@@ -73,77 +74,83 @@
             <section id="results" class="panel results" aria-labelledby="results-title">
                 <h2 id="results-title">Results</h2>
                 <p class="status-message">{{ status_message | default('Enter a journey to retrieve route details.') }}</p>
-                {% set side_value = recommended_side | default('--') %}
-                {% set side_class = side_value | lower | replace(' ', '-') %}
-                <div class="bus-recommendation bus-recommendation--{{ side_class }}" aria-label="Visual bus recommendation">
-                    <span class="card-label">Recommended side</span>
-                    <strong>{{ side_value }}</strong>
-                    <div class="bus-visual" aria-hidden="true">
-                        <div class="direction-arrow direction-arrow--left">←</div>
-                        <div class="bus-shell">
-                            <div class="seat-column seat-column--left">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                                <span></span>
+                {% if journey_timeline %}
+                    <div class="results-content">
+                        {% set side_value = recommended_side | default('--') %}
+                        {% set side_class = side_value | lower | replace(' ', '-') %}
+                        <div class="bus-recommendation bus-recommendation--{{ side_class }}" aria-label="Visual bus recommendation">
+                            <span class="card-label">Recommended side</span>
+                            <strong>{{ side_value }}</strong>
+                            <div class="bus-visual" aria-hidden="true">
+                                <div class="direction-arrow direction-arrow--left">&larr;</div>
+                                <div class="bus-shell">
+                                    <div class="seat-column seat-column--left">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                    <div class="bus-aisle"></div>
+                                    <div class="seat-column seat-column--right">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                </div>
+                                <div class="direction-arrow direction-arrow--right">&rarr;</div>
                             </div>
-                            <div class="bus-aisle"></div>
-                            <div class="seat-column seat-column--right">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
+                            <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
                         </div>
-                        <div class="direction-arrow direction-arrow--right">→</div>
-                    </div>
-                    <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
-                </div>
-                <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' data-timeline='{{ journey_timeline | default([]) | tojson }}' aria-label="Retrieved bus route map"></div>
-                <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
-                <div class="map-summary" aria-label="Route map summary">
-                    <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
-                    <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
-                </div>
-                <dl class="result-list">
-                    <div>
-                        <dt>Confidence</dt>
-                        <dd>{{ shade_score | default('--') }}{% if shade_score is defined and shade_score != '--' %}%{% endif %}</dd>
-                    </div>
-                    <div>
-                        <dt>Left Exposure</dt>
-                        <dd>{{ left_exposure | default('--') }}{% if left_exposure is defined %}%{% endif %}</dd>
-                    </div>
-                    <div>
-                        <dt>Right Exposure</dt>
-                        <dd>{{ right_exposure | default('--') }}{% if right_exposure is defined %}%{% endif %}</dd>
-                    </div>
-                    <div>
-                        <dt>Route Points</dt>
-                        <dd>{{ route_coordinate_count | default('--') }}</dd>
-                    </div>
-                    <div>
-                        <dt>Turn Steps</dt>
-                        <dd>{{ turn_count | default('--') }}</dd>
-                    </div>
-                </dl>
+                        <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' data-timeline='{{ journey_timeline | default([]) | tojson }}' aria-label="Retrieved bus route map"></div>
+                        <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
+                        <div class="map-summary" aria-label="Route map summary">
+                            <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
+                            <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
+                        </div>
+                        <dl class="result-list">
+                            <div>
+                                <dt>Confidence</dt>
+                                <dd>{{ shade_score | default('--') }}{% if shade_score is defined and shade_score != '--' %}%{% endif %}</dd>
+                            </div>
+                            <div>
+                                <dt>Left Exposure</dt>
+                                <dd>{{ left_exposure | default('--') }}{% if left_exposure is defined %}%{% endif %}</dd>
+                            </div>
+                            <div>
+                                <dt>Right Exposure</dt>
+                                <dd>{{ right_exposure | default('--') }}{% if right_exposure is defined %}%{% endif %}</dd>
+                            </div>
+                            <div>
+                                <dt>Route Points</dt>
+                                <dd>{{ route_coordinate_count | default('--') }}</dd>
+                            </div>
+                            <div>
+                                <dt>Turn Steps</dt>
+                                <dd>{{ turn_count | default('--') }}</dd>
+                            </div>
+                        </dl>
 
-                <section class="timeline" aria-labelledby="timeline-title">
-                    <h3 id="timeline-title">Journey timeline</h3>
-                    {% if journey_timeline %}
-                        <div class="timeline-list">
-                            {% for item in journey_timeline %}
-                                <article class="timeline-item">
-                                    <span>{{ item.time }}</span>
-                                    <strong>{{ item.recommended_side }}</strong>
-                                    <small>Left: {{ item.left_exposure }} | Right: {{ item.right_exposure }}</small>
-                                </article>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="timeline-empty">Timeline will appear after a route is analyzed.</p>
-                    {% endif %}
-                </section>
+                        <section class="timeline" aria-labelledby="timeline-title">
+                            <h3 id="timeline-title">Journey timeline</h3>
+                            <div class="timeline-list">
+                                {% for item in journey_timeline %}
+                                    <article class="timeline-item">
+                                        <span>{{ item.time }}</span>
+                                        <strong>{{ item.recommended_side }}</strong>
+                                        <small>Left: {{ item.left_exposure }} | Right: {{ item.right_exposure }}</small>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </div>
+                {% else %}
+                    <div class="empty-state" aria-label="No journey analyzed yet">
+                        <span class="empty-state-icon" aria-hidden="true">BS</span>
+                        <h3>Ready when your route is.</h3>
+                        <p>Enter your starting point, destination, date, and time to see the shaded side, route map, and journey timeline.</p>
+                    </div>
+                {% endif %}
             </section>
         </section>
 
