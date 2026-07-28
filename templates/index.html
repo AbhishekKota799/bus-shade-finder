@@ -73,12 +73,6 @@
             <section id="results" class="panel results" aria-labelledby="results-title">
                 <h2 id="results-title">Results</h2>
                 <p class="status-message">{{ status_message | default('Enter a journey to retrieve route details.') }}</p>
-                <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' aria-label="Retrieved bus route map"></div>
-                <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
-                <div class="map-summary" aria-label="Route map summary">
-                    <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
-                    <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
-                </div>
                 {% set side_value = recommended_side | default('--') %}
                 {% set side_class = side_value | lower | replace(' ', '-') %}
                 <div class="bus-recommendation bus-recommendation--{{ side_class }}" aria-label="Visual bus recommendation">
@@ -104,6 +98,12 @@
                         <div class="direction-arrow direction-arrow--right">→</div>
                     </div>
                     <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
+                </div>
+                <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' aria-label="Retrieved bus route map"></div>
+                <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
+                <div class="map-summary" aria-label="Route map summary">
+                    <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
+                    <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
                 </div>
                 <dl class="result-list">
                     <div>
