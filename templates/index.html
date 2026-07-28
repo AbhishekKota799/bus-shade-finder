@@ -99,7 +99,7 @@
                     </div>
                     <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
                 </div>
-                <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' aria-label="Retrieved bus route map"></div>
+                <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' data-timeline='{{ journey_timeline | default([]) | tojson }}' aria-label="Retrieved bus route map"></div>
                 <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
                 <div class="map-summary" aria-label="Route map summary">
                     <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>

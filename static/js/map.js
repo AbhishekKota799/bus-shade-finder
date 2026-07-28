@@ -15,18 +15,56 @@ function toLeafletCoordinates(routeCoordinates) {
         .map(([longitude, latitude]) => [latitude, longitude]);
 }
 
+function createEndpointIcon(label, className) {
+    return L.divIcon({
+        className: 'map-marker-shell',
+        html: `<span class="map-marker ${className}">${label}</span>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+        popupAnchor: [0, -18],
+    });
+}
+
+function createTimelineIcon(number) {
+    return L.divIcon({
+        className: 'map-marker-shell',
+        html: `<span class="timeline-map-marker">${number}</span>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -12],
+    });
+}
+
 function addRouteMarkers(map, startMarker, destinationMarker) {
     if (startMarker) {
-        L.marker([startMarker.latitude, startMarker.longitude])
+        L.marker([startMarker.latitude, startMarker.longitude], {
+            icon: createEndpointIcon('S', 'map-marker--start'),
+        })
             .addTo(map)
             .bindPopup('Start: ' + startMarker.label);
     }
 
     if (destinationMarker) {
-        L.marker([destinationMarker.latitude, destinationMarker.longitude])
+        L.marker([destinationMarker.latitude, destinationMarker.longitude], {
+            icon: createEndpointIcon('D', 'map-marker--destination'),
+        })
             .addTo(map)
             .bindPopup('Destination: ' + destinationMarker.label);
     }
+}
+
+function addTimelineMarkers(map, timelineItems) {
+    timelineItems
+        .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+        .forEach((item, index) => {
+            L.marker([item.latitude, item.longitude], {
+                icon: createTimelineIcon(index + 1),
+            })
+                .addTo(map)
+                .bindPopup(
+                    `Stop ${index + 1}<br>${item.time}<br>${item.recommended_side}`
+                );
+        });
 }
 
 function initializeRouteMap() {
@@ -39,6 +77,7 @@ function initializeRouteMap() {
     const routeCoordinates = parseMapData(mapElement, 'route', []);
     const startMarker = parseMapData(mapElement, 'start', null);
     const destinationMarker = parseMapData(mapElement, 'destination', null);
+    const timelineItems = parseMapData(mapElement, 'timeline', []);
     const leafletCoordinates = toLeafletCoordinates(routeCoordinates);
     const map = L.map(mapElement).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
@@ -52,21 +91,28 @@ function initializeRouteMap() {
     }
 
     mapElement.classList.add('has-route');
+    L.polyline(leafletCoordinates, {
+        color: '#ffffff',
+        weight: 11,
+        opacity: 0.95,
+    }).addTo(map);
     const routeLine = L.polyline(leafletCoordinates, {
-        color: '#176b87',
-        weight: 5,
-        opacity: 0.9,
+        color: '#0f4f64',
+        weight: 7,
+        opacity: 1,
+        lineJoin: 'round',
+        lineCap: 'round',
     }).addTo(map);
 
     addRouteMarkers(map, startMarker, destinationMarker);
+    addTimelineMarkers(map, timelineItems);
     setTimeout(() => {
-    map.invalidateSize();
-    map.fitBounds(routeLine.getBounds(), {
-        padding: [28, 28]
-    });
-}, 100);
+        const padding = window.matchMedia('(max-width: 760px)').matches ? [36, 36] : [56, 56];
+
+        map.invalidateSize();
+        map.fitBounds(routeLine.getBounds(), { padding });
+    }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', initializeRouteMap);
-
 
