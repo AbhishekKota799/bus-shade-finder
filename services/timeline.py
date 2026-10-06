@@ -1,10 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any
 
-from services.heading import HeadingCalculationError, calculate_heading
 from services.recommendation import recommend_side
-from services.shade import ShadeExposureError, calculate_side_exposure
-from services.solar import SolarCalculationError, calculate_solar_position
 
 DEFAULT_TIMELINE_SEGMENTS = 12
 
@@ -20,122 +18,99 @@ class TimelineEntry:
     time: str
     latitude: float
     longitude: float
+    heading: float
+    sun_azimuth: float
+    sun_elevation: float
     recommended_side: str
-    left_exposure: bool
-    right_exposure: bool
+    left_exposure: float
+    right_exposure: float
 
 
 def build_journey_timeline(
-    route_coordinates: list[list[float]],
-    departure_time: datetime,
-    duration_seconds: float,
-    timezone_name: str = 'UTC',
+    analyzed_segments: list[dict[str, Any]],
     segment_count: int = DEFAULT_TIMELINE_SEGMENTS,
 ) -> list[dict[str, object]]:
-    """Build ordered sunlight exposure snapshots across a route."""
-    _validate_timeline_inputs(route_coordinates, duration_seconds, segment_count)
-    coordinate_pairs = _build_evenly_spaced_pairs(route_coordinates, segment_count)
-    total_pairs = len(coordinate_pairs)
-    timeline: list[dict[str, object]] = []
-
-    for index, (start, end) in enumerate(coordinate_pairs):
-        timestamp = departure_time + timedelta(
-            seconds=(duration_seconds * index) / total_pairs,
+    """Build ordered timeline entries from analyzed route segments."""
+    _validate_timeline_inputs(analyzed_segments, segment_count)
+    sampled_segments = _sample_evenly(analyzed_segments, segment_count)
+    return [
+        _serialize_timeline_entry(
+            segment,
+            use_segment_end=index == len(sampled_segments) - 1
+            and segment is analyzed_segments[-1],
         )
-        longitude, latitude = start
-        heading = _calculate_heading(start, end)
-        solar_position = _calculate_solar_position(
-            latitude,
-            longitude,
-            timestamp,
-            timezone_name,
-        )
-        exposure = _calculate_exposure(heading, solar_position.azimuth)
-        recommendation = recommend_side(
-            exposure.exposure_percentage['left'],
-            exposure.exposure_percentage['right'],
-        )
-        segment_exposure = exposure.segments[0]
-
-        timeline.append(
-            {
-                'time': timestamp.isoformat(timespec='minutes'),
-                'latitude': round(latitude, 6),
-                'longitude': round(longitude, 6),
-                'recommended_side': recommendation.recommended_side,
-                'left_exposure': segment_exposure.left_exposed,
-                'right_exposure': segment_exposure.right_exposed,
-            }
-        )
-
-    return timeline
+        for index, segment in enumerate(sampled_segments)
+    ]
 
 
-def _build_evenly_spaced_pairs(
-    route_coordinates: list[list[float]],
+
+def _serialize_timeline_entry(
+    segment: dict[str, Any],
+    use_segment_end: bool = False,
+) -> dict[str, object]:
+    """Convert one segment to a timeline entry using true exposure percentages."""
+    left_percentage = min(segment['left_exposure'] * 100, 100.0)
+    right_percentage = min(segment['right_exposure'] * 100, 100.0)
+
+    recommendation = recommend_side(left_percentage, right_percentage)
+    timestamp = segment['timestamp']
+    coordinate = segment['start']
+    if use_segment_end:
+        timestamp += timedelta(seconds=segment.get('segment_duration_seconds', 0))
+        coordinate = segment['end']
+    longitude, latitude = coordinate
+
+    return {
+        'time': timestamp.isoformat(timespec='minutes'),
+        'latitude': round(latitude, 6),
+        'longitude': round(longitude, 6),
+        'heading': round(segment['heading'], 2),
+        'sun_azimuth': round(segment['sun_azimuth'], 2),
+        'sun_elevation': round(segment['sun_elevation'], 2),
+        'recommended_side': recommendation.recommended_side,
+        'left_exposure': round(left_percentage, 2),
+        'right_exposure': round(right_percentage, 2),
+    }
+
+
+def _sample_evenly(
+    analyzed_segments: list[dict[str, Any]],
     requested_segments: int,
-) -> list[tuple[list[float], list[float]]]:
-    available_segments = len(route_coordinates) - 1
-    segment_count = min(requested_segments, available_segments)
-    pairs: list[tuple[list[float], list[float]]] = []
+) -> list[dict[str, Any]]:
+    """Sample unique segments evenly across the route (no duplicates)."""
+    total = len(analyzed_segments)
 
-    for index in range(segment_count):
-        start_index = int((index * available_segments) / segment_count)
-        end_index = int(((index + 1) * available_segments) / segment_count)
-        if end_index <= start_index:
-            end_index = start_index + 1
-        pairs.append((route_coordinates[start_index], route_coordinates[end_index]))
+    # Never request more samples than available segments.
+    sample_count = min(requested_segments, total)
 
-    return pairs
+    if sample_count == 1:
+        return [analyzed_segments[0]]
 
-
-def _calculate_heading(start: list[float], end: list[float]) -> float:
-    try:
-        return calculate_heading(start, end)
-    except HeadingCalculationError as exc:
-        raise TimelineError(str(exc)) from exc
+    indices = [
+        round(index * (total - 1) / (sample_count - 1))
+        for index in range(sample_count)
+    ]
+    return [analyzed_segments[index] for index in indices]
 
 
-def _calculate_solar_position(
-    latitude: float,
-    longitude: float,
-    timestamp: datetime,
-    timezone_name: str,
-):
-    try:
-        return calculate_solar_position(
-            latitude=latitude,
-            longitude=longitude,
-            when=timestamp,
-            timezone_name=timezone_name,
-        )
-    except SolarCalculationError as exc:
-        raise TimelineError(str(exc)) from exc
-
-
-def _calculate_exposure(heading: float, sun_azimuth: float):
-    try:
-        return calculate_side_exposure(
-            [
-                {
-                    'segment_index': 0,
-                    'heading': heading,
-                    'sun_azimuth': sun_azimuth,
-                }
-            ]
-        )
-    except ShadeExposureError as exc:
-        raise TimelineError(str(exc)) from exc
+def estimate_segment_timestamp(
+    departure_time: datetime,
+    elapsed_weight: float,
+    total_weight: float,
+    duration_seconds: float,
+) -> datetime:
+    """Estimate segment timestamp from weighted route progress."""
+    if total_weight <= 0:
+        raise TimelineError('Total segment weight must be greater than zero.')
+    progress = elapsed_weight / total_weight
+    return departure_time + timedelta(seconds=duration_seconds * progress)
 
 
 def _validate_timeline_inputs(
-    route_coordinates: list[list[float]],
-    duration_seconds: float,
+    analyzed_segments: list[dict[str, Any]],
     segment_count: int,
 ) -> None:
-    if not isinstance(route_coordinates, list) or len(route_coordinates) < 2:
-        raise TimelineError('At least two route coordinates are required.')
-    if not isinstance(duration_seconds, int | float) or duration_seconds < 0:
-        raise TimelineError('Route duration must be a non-negative number.')
+    if not isinstance(analyzed_segments, list) or not analyzed_segments:
+        raise TimelineError('At least one analyzed segment is required.')
     if not isinstance(segment_count, int) or segment_count < 1:
         raise TimelineError('Timeline segment count must be at least 1.')

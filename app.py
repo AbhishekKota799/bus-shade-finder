@@ -1,5 +1,6 @@
 import logging
 from datetime import date, datetime
+from functools import lru_cache
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
@@ -44,6 +45,13 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 
+# --- Simple in-memory geocoding cache to respect Nominatim rate limits ---
+@lru_cache(maxsize=256)
+def _geocode_cached(address: str, base_url: str, user_agent: str, timeout: float):
+    """Cache geocoding results per address to avoid repeated API calls."""
+    return geocode_address(address, base_url, user_agent, timeout)
+
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     """Render the home page and handle route lookup submissions."""
@@ -85,12 +93,7 @@ def solar_data():
         logger.warning('Solar calculation failed: %s', exc)
         return jsonify({'error': str(exc)}), 400
 
-    return jsonify(
-        {
-            'azimuth': position.azimuth,
-            'elevation': position.elevation,
-        }
-    )
+    return jsonify({'azimuth': position.azimuth, 'elevation': position.elevation})
 
 
 @app.post('/api/headings')
@@ -105,12 +108,10 @@ def route_headings():
         logger.warning('Heading calculation failed: %s', exc)
         return jsonify({'error': str(exc)}), 400
 
-    return jsonify(
-        {
-            'segment_count': len(headings),
-            'headings': serialize_headings(headings),
-        }
-    )
+    return jsonify({
+        'segment_count': len(headings),
+        'headings': serialize_headings(headings),
+    })
 
 
 @app.post('/api/relative-sun')
@@ -120,22 +121,17 @@ def relative_sun_data():
 
     try:
         sun_azimuth = float(payload.get('sun_azimuth', ''))
-        positions = classify_route_segments(
-            payload.get('headings'),
-            sun_azimuth,
-        )
+        positions = classify_route_segments(payload.get('headings'), sun_azimuth)
     except (ValueError, TypeError):
         return jsonify({'error': 'Sun azimuth is required and must be numeric.'}), 400
     except RelativeSunError as exc:
         logger.warning('Relative sun calculation failed: %s', exc)
         return jsonify({'error': str(exc)}), 400
 
-    return jsonify(
-        {
-            'segment_count': len(positions),
-            'relative_sun': serialize_relative_positions(positions),
-        }
-    )
+    return jsonify({
+        'segment_count': len(positions),
+        'relative_sun': serialize_relative_positions(positions),
+    })
 
 
 @app.post('/api/shade-exposure')
@@ -223,6 +219,8 @@ def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
             geocoder_user_agent=app.config['GEOCODER_USER_AGENT'],
             osrm_base_url=app.config['OSRM_BASE_URL'],
             request_timeout_seconds=app.config['REQUEST_TIMEOUT_SECONDS'],
+            timezone_name=app.config['TIMEZONE_NAME'],
+            geocode_func=_geocode_cached,   # <-- cached geocoder injected
         )
         departure_time = datetime.strptime(
             f"{form_values['departure_date']} {form_values['departure_time']}",
@@ -278,5 +276,5 @@ def _build_route_context(form_values: dict[str, str]) -> dict[str, object]:
     }
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=app.config.get('DEBUG', False))

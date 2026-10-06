@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 
@@ -24,6 +25,13 @@ def recommend_side(
 
     difference = abs(left_percentage - right_percentage)
     confidence = round(difference, 2)
+
+    if left_percentage == 0 and right_percentage == 0:
+        return SeatRecommendation(
+            recommended_side='Either Side',
+            confidence=100.0,
+            reason='No direct sunlight is expected, so either side should be shaded.',
+        )
 
     if difference < 5:
         return SeatRecommendation(
@@ -67,7 +75,11 @@ def serialize_recommendation(
 
 
 def _validate_percentage(value: float, label: str) -> None:
-    if not isinstance(value, int | float):
+    if (
+        not isinstance(value, int | float)
+        or isinstance(value, bool)
+        or not math.isfinite(float(value))
+    ):
         raise RecommendationError(f'{label} must be numeric.')
     if not 0 <= value <= 100:
         raise RecommendationError(f'{label} must be between 0 and 100.')

@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -39,6 +40,13 @@ def calculate_relative_angle(bus_heading: float, sun_azimuth: float) -> float:
     return round((sun_azimuth - bus_heading + 360) % 360, 2)
 
 
+def calculate_signed_relative_angle(bus_heading: float, sun_azimuth: float) -> float:
+    """Return relative sun angle in [-180, 180), where positive means right side."""
+    _validate_angle(bus_heading, 'Bus heading')
+    _validate_angle(sun_azimuth, 'Sun azimuth')
+    return round(((sun_azimuth - bus_heading + 180) % 360) - 180, 2)
+
+
 def classify_route_segments(
     segment_headings: list[dict[str, Any]],
     sun_azimuth: float,
@@ -54,7 +62,7 @@ def classify_route_segments(
             raise RelativeSunError(f'Segment {index} must be an object.')
 
         heading = segment.get('heading')
-        if not isinstance(heading, int | float):
+        if not _is_real_number(heading):
             raise RelativeSunError(f'Segment {index} heading must be numeric.')
 
         segment_index = segment.get('segment_index', index)
@@ -92,7 +100,15 @@ def serialize_relative_positions(
 
 
 def _validate_angle(value: float, label: str) -> None:
-    if not isinstance(value, int | float):
+    if not _is_real_number(value):
         raise RelativeSunError(f'{label} must be numeric.')
     if not 0 <= value < 360:
         raise RelativeSunError(f'{label} must be between 0 and 360 degrees.')
+
+
+def _is_real_number(value: object) -> bool:
+    return (
+        isinstance(value, int | float)
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+    )

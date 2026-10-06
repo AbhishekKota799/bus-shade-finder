@@ -7,6 +7,28 @@ const loadingMessages = [
     'Analyzing shade...',
 ];
 
+let loadingTimer = null;
+
+function startLoadingMessages() {
+    if (!loadingOverlay || !loadingStatus) {
+        return;
+    }
+
+    let messageIndex = 0;
+    loadingOverlay.classList.add('is-visible');
+    loadingOverlay.setAttribute('aria-hidden', 'false');
+    loadingStatus.textContent = loadingMessages[messageIndex];
+
+    // Clear any previous timer before starting a new one (prevents stacking).
+    if (loadingTimer) {
+        window.clearInterval(loadingTimer);
+    }
+    loadingTimer = window.setInterval(() => {
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        loadingStatus.textContent = loadingMessages[messageIndex];
+    }, 1400);
+}
+
 if (tripForm) {
     tripForm.addEventListener('submit', () => {
         if (!tripForm.checkValidity()) {
@@ -14,22 +36,12 @@ if (tripForm) {
         }
 
         const submitButton = tripForm.querySelector('button[type="submit"]');
-
         if (submitButton) {
             submitButton.disabled = true;
             submitButton.textContent = 'Analyzing...';
         }
 
-        if (loadingOverlay && loadingStatus) {
-            let messageIndex = 0;
-            loadingOverlay.classList.add('is-visible');
-            loadingOverlay.setAttribute('aria-hidden', 'false');
-            loadingStatus.textContent = loadingMessages[messageIndex];
-
-            window.setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                loadingStatus.textContent = loadingMessages[messageIndex];
-            }, 1400);
-        }
+        startLoadingMessages();
     });
 }
+
