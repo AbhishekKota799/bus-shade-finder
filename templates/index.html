@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <svg class="icon-sprite" aria-hidden="true" focusable="false">
+        <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></symbol>
+        <symbol id="icon-flag" viewBox="0 0 24 24"><path d="M5 21V4m0 1h10l-1.5 3L15 11H5"/></symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+        <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></symbol>
+        <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m17.1-7.1-1.4 1.4M6.3 17.7l-1.4 1.4m0-14.2 1.4 1.4m11.4 11.4 1.4 1.4"/></symbol>
+        <symbol id="icon-timeline" viewBox="0 0 24 24"><path d="M6 5h14M4 5h.01M6 12h14M4 12h.01M6 19h14M4 19h.01"/></symbol>
+        <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+        <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></symbol>
+    </svg>
     <div id="loading-overlay" class="loading-overlay" aria-live="polite" aria-hidden="true">
         <div class="loading-panel" role="status">
             <div class="loading-spinner" aria-hidden="true"></div>
@@ -39,8 +50,8 @@
             <div class="panel">
                 <h2 id="planner-title">Plan your journey</h2>
                 {% if errors %}
-                    <div class="error-card" role="alert" aria-labelledby="form-error-title">
-                        <span class="error-icon" aria-hidden="true">!</span>
+                    <div id="form-errors" class="error-card" role="alert" aria-labelledby="form-error-title">
+                        <svg class="error-icon" aria-hidden="true"><use href="#icon-alert"></use></svg>
                         <p id="form-error-title">Please review your journey details:</p>
                         <ul>
                             {% for error in errors %}
@@ -50,24 +61,36 @@
                     </div>
                 {% endif %}
                 <form id="trip-form" class="trip-form" method="post" action="{{ url_for('home') }}#results">
-                    <label for="start_location">Starting Location</label>
-                    <input id="start_location" name="start_location" type="text" placeholder="Enter starting point" value="{{ start_location | default('') }}" required>
-
-                    <label for="destination">Destination</label>
-                    <input id="destination" name="destination" type="text" placeholder="Enter destination" value="{{ destination | default('') }}" required>
-
-                    <div class="form-row">
-                        <div>
-                            <label for="departure_date">Departure Date</label>
-                            <input id="departure_date" name="departure_date" type="date" value="{{ departure_date | default('') }}" required>
-                        </div>
-                        <div>
-                            <label for="departure_time">Departure Time</label>
-                            <input id="departure_time" name="departure_time" type="time" value="{{ departure_time | default('') }}" required>
-                        </div>
+                    <div class="field-group">
+                        <label for="start_location"><svg class="field-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Starting point</label>
+                        <input id="start_location" name="start_location" type="text" autocomplete="street-address" placeholder="Where are you leaving from?" value="{{ start_location | default('') }}"{% if errors %} aria-describedby="form-errors" aria-invalid="true"{% endif %} required>
                     </div>
 
-                    <button type="submit">Find Best Seat</button>
+                    <div class="field-group">
+                        <label for="destination"><svg class="field-icon" aria-hidden="true"><use href="#icon-flag"></use></svg>Destination</label>
+                        <input id="destination" name="destination" type="text" autocomplete="street-address" placeholder="Where are you going?" value="{{ destination | default('') }}"{% if errors %} aria-describedby="form-errors" aria-invalid="true"{% endif %} required>
+                    </div>
+
+                    <fieldset class="departure-fieldset">
+                        <legend><svg class="field-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>When are you leaving?</legend>
+                        <div class="date-shortcuts" role="group" aria-label="Choose a departure date">
+                            <button class="date-choice" type="button" data-date-choice="today" aria-pressed="false"><svg aria-hidden="true"><use href="#icon-sun"></use></svg>Today</button>
+                            <button class="date-choice" type="button" data-date-choice="tomorrow" aria-pressed="false"><svg aria-hidden="true"><use href="#icon-calendar"></use></svg>Tomorrow</button>
+                            <button class="date-choice" type="button" data-date-choice="other" aria-pressed="false"><svg aria-hidden="true"><use href="#icon-calendar"></use></svg>Other date</button>
+                        </div>
+                        <div class="form-row">
+                            <div class="field-group date-field">
+                                <label for="departure_date">Departure date</label>
+                                <input id="departure_date" name="departure_date" type="date" value="{{ departure_date | default('') }}"{% if errors %} aria-describedby="form-errors" aria-invalid="true"{% endif %} required>
+                            </div>
+                            <div class="field-group">
+                                <label for="departure_time"><svg class="field-icon" aria-hidden="true"><use href="#icon-clock"></use></svg>Departure time</label>
+                                <input id="departure_time" name="departure_time" type="time" value="{{ departure_time | default('') }}"{% if errors %} aria-describedby="form-errors" aria-invalid="true"{% endif %} required>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <button class="primary-action" type="submit"><svg aria-hidden="true"><use href="#icon-search"></use></svg><span>Find My Shade</span></button>
                 </form>
             </div>
 
@@ -79,7 +102,7 @@
                         {% set side_value = recommended_side | default('--') %}
                         {% set side_class = side_value | lower | replace(' ', '-') %}
                         <div class="bus-recommendation bus-recommendation--{{ side_class }}" aria-label="Visual bus recommendation">
-                            <span class="card-label">Recommended side</span>
+                            <span class="card-label"><svg aria-hidden="true"><use href="#icon-sun"></use></svg>Recommended side</span>
                             <strong>{{ side_value }}</strong>
                             <div class="bus-visual" aria-hidden="true">
                                 <div class="direction-arrow direction-arrow--left">&larr;</div>
@@ -102,13 +125,7 @@
                             </div>
                             <p>{{ recommendation_reason | default('Submit a journey to see the recommendation details.') }}</p>
                         </div>
-                        <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' data-timeline='{{ journey_timeline | default([]) | tojson }}' aria-label="Retrieved bus route map"></div>
-                        <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
-                        <div class="map-summary" aria-label="Route map summary">
-                            <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
-                            <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
-                        </div>
-                        <dl class="result-list">
+                        <dl class="result-list recommendation-details" aria-label="Recommendation details">
                             <div>
                                 <dt>Confidence</dt>
                                 <dd>{{ shade_score | default('--') }}{% if shade_score is defined and shade_score != '--' %}%{% endif %}</dd>
@@ -130,15 +147,27 @@
                                 <dd>{{ turn_count | default('--') }}</dd>
                             </div>
                         </dl>
+                        <div id="route-map" class="route-map" data-route='{{ route_coordinates | default([]) | tojson }}' data-start='{{ start_marker | default(none) | tojson }}' data-destination='{{ destination_marker | default(none) | tojson }}' data-timeline='{{ journey_timeline | default([]) | tojson }}' role="region" tabindex="0" aria-label="Retrieved bus route map"></div>
+                        <p id="map-empty-message" class="map-empty-message">No route is available yet. Submit a journey to show it on the map.</p>
+                        <div class="map-summary" aria-label="Route map summary">
+                            <span>Distance: <strong>{{ route_distance | default('--') }}</strong></span>
+                            <span>Duration: <strong>{{ estimated_travel_time | default('--') }}</strong></span>
+                        </div>
 
                         <section class="timeline" aria-labelledby="timeline-title">
-                            <h3 id="timeline-title">Journey timeline</h3>
-                            <div class="timeline-list">
+                            <button id="timeline-toggle" class="timeline-toggle" type="button" aria-expanded="false" aria-controls="timeline-list">
+                                <span class="timeline-toggle-title"><svg aria-hidden="true"><use href="#icon-timeline"></use></svg><span id="timeline-title">Journey timeline</span></span>
+                                <span class="timeline-toggle-meta"><span>{{ journey_timeline | length }} checkpoints</span><svg class="timeline-chevron" aria-hidden="true"><use href="#icon-chevron"></use></svg></span>
+                            </button>
+                            <div id="timeline-list" class="timeline-list" hidden>
                                 {% for item in journey_timeline %}
                                     <article class="timeline-item">
-                                        <span>{{ item.time }}</span>
+                                        <time datetime="{{ item.time }}">{{ item.time }}</time>
                                         <strong>{{ item.recommended_side }}</strong>
-                                        <small>Left: {{ item.left_exposure }} | Right: {{ item.right_exposure }}</small>
+                                        <div class="timeline-exposures">
+                                            <span>Left sunlight: {{ item.left_exposure }}</span>
+                                            <span>Right sunlight: {{ item.right_exposure }}</span>
+                                        </div>
                                     </article>
                                 {% endfor %}
                             </div>
